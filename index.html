@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dehri | Local grocery and snacks delivery in Chakia, Milki, Jamalpur and Talibpur</title>
+  <meta name="description" content="Order groceries and snacks from local shops in Chakia, Milki, Jamalpur and Talibpur, Uttar Pradesh. Frontend demo.">
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+
+  <!-- Fonts (optional, the site falls back to system fonts when offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet map styles -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-view="customer">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header" id="top">
+    <div class="container header-row">
+      <a class="brand" href="#top" data-go="customer" aria-label="Dehri home">
+        <img src="images/logo.svg" alt="" width="34" height="34">
+        <span>Dehri</span>
+      </a>
+
+      <nav class="main-nav" aria-label="Main">
+        <a href="#shop" data-go="customer">Shop</a>
+        <a href="#areas" data-go="customer">Service areas</a>
+        <a href="#delivery" data-go="customer">Delivery</a>
+        <a href="#track" data-go="customer">Track order</a>
+      </nav>
+
+      <div class="portal-switch" role="group" aria-label="Choose portal">
+        <button type="button" data-view-btn="customer" aria-pressed="true">Customer</button>
+        <button type="button" data-view-btn="shopkeeper" aria-pressed="false">Shopkeeper</button>
+      </div>
+
+      <button type="button" class="cart-button" id="cartButton" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 4h2l2.4 11h10.2L20 7H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>
+        <span>Cart</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+
+    <div class="container header-tools" data-panel="customer">
+      <label class="field-inline">
+        <span>Deliver to</span>
+        <select id="areaSelect" aria-label="Service area"></select>
+      </label>
+      <label class="search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="search" id="searchInput" placeholder="Search atta, milk, bhujia" aria-label="Search products">
+      </label>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ================= CUSTOMER PORTAL ================= -->
+    <div data-panel="customer">
+
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <h1>Groceries and snacks from the shops you already know.</h1>
+            <p>Order from kirana stores in Chakia, Milki, Jamalpur and Talibpur. Every price shows its tax and charges before you add it to the cart.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#shop">Browse products</a>
+              <a class="btn btn-ghost" href="#areas">Check service areas</a>
+            </div>
+          </div>
+          <!-- The price slip is filled in by script.js from CONFIG and the first snack product -->
+          <aside class="slip" id="priceSlip" aria-label="How a price is built"></aside>
+        </div>
+      </section>
+
+      <section class="section" id="shop">
+        <div class="container">
+          <div class="section-head">
+            <h2 id="productsTitle">Products</h2>
+            <p class="muted" id="resultCount"></p>
+          </div>
+          <div class="chips" id="categoryChips" role="group" aria-label="Categories"></div>
+          <div class="product-grid" id="productGrid"></div>
+        </div>
+      </section>
+
+      <section class="section section-tint" id="areas">
+        <div class="container">
+          <div class="section-head">
+            <h2>Where we deliver</h2>
+            <p class="muted">We are starting with four villages in Ballia district. Nearby towns are planned next.</p>
+          </div>
+          <div class="areas-grid">
+            <div class="areas-panel">
+              <h3>Service areas</h3>
+              <div class="area-list" id="areaList"></div>
+              <h3>Planned next</h3>
+              <ul class="planned-list" id="plannedList"></ul>
+              <button type="button" class="btn btn-ghost btn-small" id="showAllMap">Show nearby towns on map</button>
+              <p class="notice">
+                Delivery depends on shop coverage. A product can be delivered only if its shop serves your area. Map markers show approximate village locations, not exact delivery boundaries.
+              </p>
+            </div>
+            <div class="map-wrap">
+              <div id="map" role="application" aria-label="Map of service areas"></div>
+              <div class="map-legend">
+                <span><i class="dot dot-active"></i> Service area</span>
+                <span><i class="dot dot-planned"></i> Planned</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="delivery">
+        <div class="container">
+          <div class="section-head">
+            <h2>Delivery charges and partners</h2>
+          </div>
+          <div class="fee-row" id="feeRow"></div>
+          <div class="partner-grid" id="partnerGrid"></div>
+          <p class="muted small">Demo profiles. Replace them with your own delivery team in script.js.</p>
+        </div>
+      </section>
+
+      <section class="section section-tint" id="track">
+        <div class="container track-grid">
+          <div>
+            <div class="section-head">
+              <h2>Track an order</h2>
+              <p class="muted">Enter the order number shown after checkout.</p>
+            </div>
+            <form class="track-form" id="trackForm">
+              <input type="text" id="trackInput" placeholder="Example: DH10234" aria-label="Order number" autocomplete="off">
+              <button class="btn btn-primary" type="submit">Track order</button>
+            </form>
+            <p class="notice">Statuses on this page are simulated for the demo. They are not connected to GPS or a live delivery system.</p>
+          </div>
+          <div class="track-result" id="trackResult" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= SHOPKEEPER PORTAL ================= -->
+    <div data-panel="shopkeeper" hidden>
+      <section class="section">
+        <div class="container">
+          <div class="portal-head">
+            <div>
+              <h1 class="portal-title">Shopkeeper portal</h1>
+              <p class="muted">List products and manage stock. This demo saves changes in your browser only.</p>
+            </div>
+            <label class="field-inline">
+              <span>Shop</span>
+              <select id="shopSelect"></select>
+            </label>
+          </div>
+
+          <div class="stats" id="shopStats"></div>
+
+          <div class="portal-grid">
+            <form class="panel" id="productForm" novalidate>
+              <h2 id="formTitle">List a product</h2>
+              <input type="hidden" id="pfId">
+              <label class="field">
+                <span>Product name</span>
+                <input type="text" id="pfName" required maxlength="60" placeholder="Moong dal">
+              </label>
+              <div class="field-row">
+                <label class="field">
+                  <span>Pack size</span>
+                  <input type="text" id="pfUnit" required maxlength="20" placeholder="500 g">
+                </label>
+                <label class="field">
+                  <span>Category</span>
+                  <select id="pfCategory"></select>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="field">
+                  <span>Shop price (₹)</span>
+                  <input type="number" id="pfPrice" required min="1" step="0.01" placeholder="70">
+                </label>
+                <label class="field">
+                  <span>Tax (%)</span>
+                  <input type="number" id="pfTax" required min="0" max="40" step="0.1" value="5">
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="field">
+                  <span>Extra charge (₹)</span>
+                  <input type="number" id="pfExtra" required min="0" step="0.01" value="0">
+                </label>
+                <label class="field">
+                  <span>Stock</span>
+                  <input type="number" id="pfStock" required min="0" step="1" value="10">
+                </label>
+              </div>
+              <label class="field">
+                <span>Product photo (optional)</span>
+                <input type="file" id="pfImage" accept="image/*">
+              </label>
+              <div class="form-preview">
+                <img id="pfPreview" src="images/placeholder.svg" alt="Product photo preview" width="72" height="72">
+                <p class="muted small" id="pfTotal">Customer pays ₹0</p>
+              </div>
+              <p class="form-error" id="pfError" role="alert"></p>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit" id="pfSubmit">List product</button>
+                <button class="btn btn-ghost" type="button" id="pfCancel" hidden>Cancel</button>
+              </div>
+            </form>
+
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Inventory</h2>
+                <button type="button" class="btn btn-ghost btn-small" id="resetDemo">Reset demo data</button>
+              </div>
+              <div class="table-wrap">
+                <table class="inventory">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="num">Shop price</th>
+                      <th class="num">Tax</th>
+                      <th class="num">Extra</th>
+                      <th class="num">Customer pays</th>
+                      <th>Stock</th>
+                      <th><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventoryBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand brand-footer" href="#top"><img src="images/logo.svg" alt="" width="30" height="30"><span>Dehri</span></a>
+        <p class="muted small">Local shops, delivered to your doorstep in Chakia, Milki, Jamalpur and Talibpur, Uttar Pradesh.</p>
+      </div>
+      <div>
+        <h3>Follow our offers</h3>
+        <ul class="social" id="socialLinks"></ul>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <p class="small" id="contactLine"></p>
+      </div>
+    </div>
+    <div class="container footer-note">
+      <p class="small muted">Demo website. No real orders, payments or deliveries are processed. Prices, tax rates, shops and partners are sample data.</p>
+    </div>
+  </footer>
+
+  <!-- Mobile cart bar -->
+  <button type="button" class="cart-bar" id="cartBar" hidden></button>
+
+  <!-- ================= CART DRAWER ================= -->
+  <div class="overlay" id="overlay" hidden></div>
+  <aside class="drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden>
+    <div class="drawer-head">
+      <h2 id="cartTitle">Your cart</h2>
+      <button type="button" class="icon-btn" id="closeCart" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="cartBody"></div>
+    <div class="drawer-foot" id="cartFoot"></div>
+  </aside>
+
+  <!-- ================= CHECKOUT DIALOG ================= -->
+  <dialog class="dialog" id="checkoutDialog" aria-labelledby="checkoutTitle">
+    <form id="checkoutForm" novalidate>
+      <div class="dialog-head">
+        <h2 id="checkoutTitle">Checkout</h2>
+        <button type="button" class="icon-btn" id="closeCheckout" aria-label="Close checkout">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="field-row">
+          <label class="field">
+            <span>Full name</span>
+            <input type="text" id="coName" required autocomplete="name">
+          </label>
+          <label class="field">
+            <span>Mobile number</span>
+            <input type="tel" id="coPhone" required inputmode="numeric" maxlength="10" placeholder="10 digits" autocomplete="tel-national">
+          </label>
+        </div>
+        <label class="field">
+          <span>Delivery area</span>
+          <select id="coArea" required></select>
+        </label>
+        <label class="field">
+          <span>Address and landmark</span>
+          <textarea id="coAddress" rows="2" required placeholder="House, lane, nearby landmark"></textarea>
+        </label>
+        <fieldset class="field">
+          <legend>Payment on delivery</legend>
+          <label class="radio"><input type="radio" name="coPay" value="Cash on delivery" checked> Cash on delivery</label>
+          <label class="radio"><input type="radio" name="coPay" value="UPI on delivery"> UPI on delivery</label>
+        </fieldset>
+        <div class="bill" id="checkoutBill"></div>
+        <p class="form-error" id="coError" role="alert"></p>
+        <p class="muted small">Demo checkout. No payment is collected and no order is sent to a shop.</p>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn btn-primary btn-block" type="submit">Place demo order</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Leaflet map script, then the site script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
